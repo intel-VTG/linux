@@ -1,0 +1,13 @@
+config DRM_ACCEL_INTEL_IPU6_PSYS
+	tristate "Intel IPU6 Processing System driver"
+	depends on ACPI || COMPILE_TEST
+	depends on X86 && X86_64 && HAS_DMA
+	select DMA_OPS
+	select IOMMU_IOVA
+	select VIDEO_INTEL_IPU6
+	help
+	  This is the 6th Gen Intel Image Processing Unit, found in Intel SoCs
+	  and used for processing RAW bayer images.
+
+	  To compile this driver, say m here! It contains 1 module
+	  intel_ipu6_psys.
