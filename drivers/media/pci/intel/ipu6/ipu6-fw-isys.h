@@ -303,7 +303,7 @@ struct ipu6_fw_isys_output_pin_payload_abi {
  *			supplied for capture on this pin
  * @ts_offsets: ts_offsets
  * @s2m_pixel_soc_pixel_remapping: pixel soc remapping (see the definition of
- *				   S2M_PIXEL_SOC_PIXEL_REMAPPING_FLAG_NO_REMAPPING)
+ *                      S2M_PIXEL_SOC_PIXEL_REMAPPING_FLAG_NO_REMAPPING)
  * @csi_be_soc_pixel_remapping: see s2m_pixel_soc_pixel_remapping
  * @send_irq: assert if pin event should trigger irq
  * @input_pin_id: related input pin id

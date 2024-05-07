@@ -206,7 +206,7 @@ static int ipu6_isys_vidioc_enum_framesizes(struct file *file, void *fh,
 }
 
 static int ipu6_isys_vidioc_g_fmt_vid_cap(struct file *file, void *fh,
-				      struct v4l2_format *f)
+					  struct v4l2_format *f)
 {
 	struct ipu6_isys_video *av = video_drvdata(file);
 
@@ -306,7 +306,7 @@ static int ipu6_isys_vidioc_try_fmt_meta_cap(struct file *file, void *fh,
 }
 
 static int ipu6_isys_vidioc_s_fmt_vid_cap(struct file *file, void *fh,
-				      struct v4l2_format *f)
+					  struct v4l2_format *f)
 {
 	struct ipu6_isys_video *av = video_drvdata(file);
 
