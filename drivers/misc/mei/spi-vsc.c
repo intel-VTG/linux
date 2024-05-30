@@ -16,9 +16,6 @@
 
 #include "hw-vsc.h"
 
-#define CVFD_ACPI_ID_TGL "INTC1059"
-#define CVFD_ACPI_ID_ADL "INTC1095"
-#define CVFD_ACPI_ID_RPL "INTC100A"
 #define LINK_NUMBER (1)
 #define METHOD_NAME_SID "SID"
 
@@ -35,16 +32,12 @@ static const struct acpi_gpio_mapping mei_vsc_acpi_gpios[] = {
 	{}
 };
 
-static struct acpi_device_id cvfd_ids[] = {
-	{
-		.id = CVFD_ACPI_ID_TGL,
-	},
-	{
-		.id = CVFD_ACPI_ID_ADL,
-	},
-	{
-		.id = CVFD_ACPI_ID_RPL,
-	},
+static const struct acpi_device_id cvfd_ids[] = {
+	{ "INTC1059", 0 },
+	{ "INTC1095", 0 },
+	{ "INTC100A", 0 },
+	{ "INTC10CF", 0 },
+	{}
 };
 
 struct match_ids_walk_data {
@@ -113,10 +106,10 @@ static int get_sensor_name(struct mei_device *dev)
 	}
 
 	ret_obj = buffer.pointer;
-	dev_info(&spi->dev, "SID status %d %lld %d - %d %s %d\n", status,
-		 buffer.length, ret_obj->type, ret_obj->string.length,
-		 ret_obj->string.pointer,
-		 acpi_has_method(adev->handle, METHOD_NAME_SID));
+	dev_dbg(&spi->dev, "SID status %d %lld %d - %d %s %d\n", status,
+		buffer.length, ret_obj->type, ret_obj->string.length,
+		ret_obj->string.pointer,
+		acpi_has_method(adev->handle, METHOD_NAME_SID));
 
 	if (ret_obj->string.length > sizeof(hw->cam_sensor_name)) {
 		ACPI_FREE(buffer.pointer);
@@ -130,6 +123,11 @@ static int get_sensor_name(struct mei_device *dev)
 		*c = tolower(*c);
 
 	ACPI_FREE(buffer.pointer);
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0)
+	acpi_dev_clear_dependencies(adev);
+#endif
+
 	return 0;
 }
 
@@ -194,17 +192,19 @@ static int mei_vsc_probe(struct spi_device *spi)
 	hw->wakeuphost = devm_gpiod_get(&spi->dev, "wakeuphost", GPIOD_IN);
 	if (IS_ERR(hw->wakeuphost)) {
 		dev_err(&spi->dev, "gpio get irq failed\n");
-		return -EINVAL;
+		return PTR_ERR(hw->wakeuphost);
 	}
+
 	hw->resetfw = devm_gpiod_get(&spi->dev, "resetfw", GPIOD_OUT_HIGH);
 	if (IS_ERR(hw->resetfw)) {
 		dev_err(&spi->dev, "gpio get resetfw failed\n");
-		return -EINVAL;
+		return PTR_ERR(hw->resetfw);
 	}
+
 	hw->wakeupfw = devm_gpiod_get(&spi->dev, "wakeupfw", GPIOD_OUT_HIGH);
 	if (IS_ERR(hw->wakeupfw)) {
 		dev_err(&spi->dev, "gpio get wakeupfw failed\n");
-		return -EINVAL;
+		return PTR_ERR(hw->wakeupfw);
 	}
 
 	ret = acpi_dev_gpio_irq_get_by(ACPI_COMPANION(&spi->dev),
@@ -327,9 +327,10 @@ static const struct dev_pm_ops mei_vsc_pm_ops = {
 };
 
 static const struct acpi_device_id mei_vsc_acpi_ids[] = {
-	{ "INTC1058", 1 },
-	{ "INTC1094", 1 },
-	{ "INTC1009", 1 }, /* RPL */
+	{ "INTC1058"},
+	{ "INTC1094"},
+	{ "INTC1009"}, /* RPL */
+	{ "INTC10D0"}, /* MTL */
 	{},
 };
 MODULE_DEVICE_TABLE(acpi, mei_vsc_acpi_ids);

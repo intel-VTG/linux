@@ -74,7 +74,7 @@ struct spi_xfer_packet {
 struct ljca_spi_dev {
 	struct platform_device *pdev;
 	struct ljca_spi_info *ctr_info;
-	struct spi_master *master;
+	struct spi_controller *controller;
 	u8 speed;
 	u8 mode;
 
@@ -207,25 +207,21 @@ static int ljca_spi_transfer(struct ljca_spi_dev *ljca_spi, const u8 *tx_data,
 	return 0;
 }
 
-static int ljca_spi_prepare_message(struct spi_master *master,
+static int ljca_spi_prepare_message(struct spi_controller *controller,
 				    struct spi_message *message)
 {
-	struct ljca_spi_dev *ljca_spi = spi_master_get_devdata(master);
-	struct spi_device *spi = message->spi;
-
-	dev_dbg(&ljca_spi->pdev->dev, "cs %d\n", spi->chip_select);
 	return 0;
 }
 
-static int ljca_spi_transfer_one(struct spi_master *master,
+static int ljca_spi_transfer_one(struct spi_controller *controller,
 				 struct spi_device *spi,
 				 struct spi_transfer *xfer)
 {
-	struct ljca_spi_dev *ljca_spi = spi_master_get_devdata(master);
+	struct ljca_spi_dev *ljca_spi = spi_controller_get_devdata(controller);
 	int ret;
 	int div;
 
-	div = DIV_ROUND_UP(master->max_speed_hz, xfer->speed_hz) / 2 - 1;
+	div = DIV_ROUND_UP(controller->max_speed_hz, xfer->speed_hz) / 2 - 1;
 	if (div > LJCA_SPI_BUS_SPEED_MIN)
 		div = LJCA_SPI_BUS_SPEED_MIN;
 
@@ -246,49 +242,49 @@ static int ljca_spi_transfer_one(struct spi_master *master,
 
 static int ljca_spi_probe(struct platform_device *pdev)
 {
-	struct spi_master *master;
+	struct spi_controller *controller;
 	struct ljca_spi_dev *ljca_spi;
 	struct ljca_platform_data *pdata = dev_get_platdata(&pdev->dev);
 	int ret;
 
-	master = spi_alloc_master(&pdev->dev, sizeof(*ljca_spi));
-	if (!master)
+	controller = spi_alloc_master(&pdev->dev, sizeof(*ljca_spi));
+	if (!controller)
 		return -ENOMEM;
 
-	platform_set_drvdata(pdev, master);
-	ljca_spi = spi_master_get_devdata(master);
+	platform_set_drvdata(pdev, controller);
+	ljca_spi = spi_controller_get_devdata(controller);
 
 	ljca_spi->ctr_info = &pdata->spi_info;
-	ljca_spi->master = master;
-	ljca_spi->master->dev.of_node = pdev->dev.of_node;
+	ljca_spi->controller = controller;
+	ljca_spi->controller->dev.of_node = pdev->dev.of_node;
 	ljca_spi->pdev = pdev;
 
-	ACPI_COMPANION_SET(&ljca_spi->master->dev, ACPI_COMPANION(&pdev->dev));
+	ACPI_COMPANION_SET(&ljca_spi->controller->dev, ACPI_COMPANION(&pdev->dev));
 
-	master->bus_num = -1;
-	master->mode_bits = SPI_CPHA | SPI_CPOL;
-	master->prepare_message = ljca_spi_prepare_message;
-	master->transfer_one = ljca_spi_transfer_one;
-	master->auto_runtime_pm = false;
-	master->max_speed_hz = LJCA_SPI_BUS_MAX_HZ;
+	controller->bus_num = -1;
+	controller->mode_bits = SPI_CPHA | SPI_CPOL;
+	controller->prepare_message = ljca_spi_prepare_message;
+	controller->transfer_one = ljca_spi_transfer_one;
+	controller->auto_runtime_pm = false;
+	controller->max_speed_hz = LJCA_SPI_BUS_MAX_HZ;
 
-	ret = devm_spi_register_master(&pdev->dev, master);
+	ret = devm_spi_register_controller(&pdev->dev, controller);
 	if (ret < 0) {
-		dev_err(&pdev->dev, "Failed to register master\n");
-		goto exit_free_master;
+		dev_err(&pdev->dev, "Failed to register controller\n");
+		goto exit_free_controller;
 	}
 
 	return ret;
 
-exit_free_master:
-	spi_master_put(master);
+exit_free_controller:
+	spi_controller_put(controller);
 	return ret;
 }
 
 static int ljca_spi_dev_remove(struct platform_device *pdev)
 {
-	struct spi_master *master = spi_master_get(platform_get_drvdata(pdev));
-	struct ljca_spi_dev *ljca_spi = spi_master_get_devdata(master);
+	struct spi_controller *controller = spi_controller_get(platform_get_drvdata(pdev));
+	struct ljca_spi_dev *ljca_spi = spi_controller_get_devdata(controller);
 
 	ljca_spi_deinit(ljca_spi);
 	return 0;
@@ -297,16 +293,16 @@ static int ljca_spi_dev_remove(struct platform_device *pdev)
 #ifdef CONFIG_PM_SLEEP
 static int ljca_spi_dev_suspend(struct device *dev)
 {
-	struct spi_master *master = dev_get_drvdata(dev);
+	struct spi_controller *controller = dev_get_drvdata(dev);
 
-	return spi_master_suspend(master);
+	return spi_controller_suspend(controller);
 }
 
 static int ljca_spi_dev_resume(struct device *dev)
 {
-	struct spi_master *master = dev_get_drvdata(dev);
+	struct spi_controller *controller = dev_get_drvdata(dev);
 
-	return spi_master_resume(master);
+	return spi_controller_resume(controller);
 }
 #endif /* CONFIG_PM_SLEEP */
 

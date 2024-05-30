@@ -1628,6 +1628,7 @@ struct mei_device *mei_vsc_dev_init(struct device *parent)
 		return NULL;
 
 	mei_device_init(dev, parent, false, &mei_vsc_hw_ops);
+
 	dev->fw_f_fw_ver_supported = 0;
 	dev->kind = 0;
 	return dev;
