@@ -21,7 +21,7 @@
 #include <linux/types.h>
 
 #include <media/ipu-bridge.h>
-#include <media/ipu6-pci-table.h>
+#include <media/ipu-pci-table.h>
 
 #include "ipu6.h"
 #include "ipu6-bus.h"

@@ -3,8 +3,8 @@
  * Copyright (C) 2024 Intel Corporation
  */
 
-#ifndef __IPU6_PCI_TBL_H__
-#define __IPU6_PCI_TBL_H__
+#ifndef __IPU_PCI_TBL_H__
+#define __IPU_PCI_TBL_H__
 
 #include <linux/pci.h>
 
@@ -14,6 +14,9 @@
 #define PCI_DEVICE_ID_INTEL_IPU6EP_ADLN		0x462e
 #define PCI_DEVICE_ID_INTEL_IPU6EP_RPLP		0xa75d
 #define PCI_DEVICE_ID_INTEL_IPU6EP_MTL		0x7d19
+
+#define PCI_DEVICE_ID_INTEL_IPU7_PCI_ID		0x645d
+#define PCI_DEVICE_ID_INTEL_IPU7P5_PCI_ID	0xb05d
 
 static const struct pci_device_id ipu6_pci_tbl[] = {
 	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_IPU6) },
@@ -25,4 +28,9 @@ static const struct pci_device_id ipu6_pci_tbl[] = {
 	{ }
 };
 
-#endif /* __IPU6_PCI_TBL_H__ */
+static const struct pci_device_id ipu7_pci_tbl[] = {
+	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_IPU7_PCI_ID)},
+	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_IPU7P5_PCI_ID)},
+	{ }
+};
+#endif /* __IPU_PCI_TBL_H__ */
